@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>เว็บสุ่มเลขหวย</title>
+  <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Itim', cursive;
+      margin: 0;
+      background-color: #f2f2f2;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 800px;
+      height: 800px;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+      background-size: cover;
+      background-position: center;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 70px;
+      font-weight: 600;
+    }
+
+    h2, h3, .run-fun, .number-box, .big-number {
+      text-shadow: 1px 1px 2px black;
+      margin: 0.2em 0;
+    }
+
+    h2 { font-size: 65px; }
+    h3 { font-size: 30px; }
+    .run-fun { font-size: 65px; font-weight: 400; }
+    .number-box { font-size: 65px; }
+    .big-number { font-size: 70px; color: gold; font-weight: 400; }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 400;
+      transition: background-color 0.3s ease;
+      color: white;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    input[type="text"], input[type="file"] {
+      padding: 6px;
+      margin-top: 10px;
+      font-size: 18px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: 'Itim', cursive;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="capture">
+    <h2 id="lotteryName">หวยลาว</h2>
+    <h3 id="date">01/08/2025</h3>
+    <div class="run-fun" id="runFun">วิ่ง-รูด 0 - 0 ฟัน 00</div>
+    <div class="number-box" id="pairsLine1">00 00 00</div>
+    <div class="number-box" id="pairsLine2">00 00 00</div>
+    <div class="big-number" id="triples">000 000</div>
+  </div>
+
+  <div class="controls">
+    <button onclick="generateNumbers()" style="background-color:#4CAF50">🔁 สุ่มใหม่</button><br><br>
+    <input type="file" accept="image/*" onchange="setBackground(event)">
+    <button onclick="saveImage()" style="background-color:#2196F3">💾 บันทึกภาพ</button><br><br>
+    <input type="text" placeholder="ระบุวันที่ (เช่น 01/08/2025)" id="dateInput" />
+    <button onclick="changeDate()" style="background-color:#FF9800">📅 เปลี่ยนวันที่</button><br><br>
+  </div>
+
+  <div class="controls">
+    <div id="lotteryButtons" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    const colors = [
+      '#e91e63', '#9c27b0', '#3f51b5', '#03a9f4', '#009688',
+      '#4caf50', '#8bc34a', '#ff9800', '#795548', '#607d8b',
+      '#f44336', '#00bcd4', '#cddc39', '#ffc107', '#673ab7'
+    ];
+
+    const lotteries = [
+      ' ลาวประตูชัยGold ', ' นิเคอิรอบเช้า ', ' ลาวTV NEW ', ' ฮานอย3DX ', ' ฮานอย4DX ',
+      ' จีนรอบเช้า ', ' ฮั่งเส็งรอบเช้า ', ' ใต้หวัน ', ' เกาหลี ', ' นิเคอิรอบบ่าย ',
+      ' ลาวFuture ', ' จีนรอบบ่าย ', ' ลาวชุมชน ', ' ฮั่งเส็งรอบบ่าย ', ' ลาวสตาร์ ',
+      ' ฮานอยDigital ', ' สิงคโปร์ ', ' ฮานอยกาชาด ', ' ไทยเย็น ', ' อินเดีย ',
+      ' ฮานอยพิเศษ ', ' ฮานอยปกติ ', ' ฮานอยVIP ', ' ลาวบ่อแก้ว ', ' ลาวบ่อแก้วพิเศษ ',
+      ' ลาวบ่อแก้วVIP ', ' หวยมาเลย์ ', ' อียิปต์ ', ' ลาวพัฒนา ', ' ลาวสามัคคี ',
+      ' ลาวบ่อแก้ว5D ', ' ลาวVIP ', ' ฮานอยEXTRA ', ' อังกฤษ ', ' เยอรมัน ',
+      ' รัสเซีย ', ' ลาวกาชาด ', ' ดาวโจนส์ ', ' ฮานอยHD GOLD '
+    ];
+
+    function setLotteryName(name) {
+      document.getElementById('lotteryName').innerText = name;
+    }
+
+    function changeDate() {
+      const date = document.getElementById('dateInput').value.trim();
+      if (date) document.getElementById('date').innerText = date;
+    }
+
+    function generateFan(run1, run2) {
+      return run1 + run2;
+    }
+
+    function getRandomDigit() {
+      return Math.floor(Math.random() * 10).toString();
+    }
+
+    function generateTwoDigit(run, excludeSet, fan) {
+      let d, pair;
+      do {
+        d = getRandomDigit();
+        pair = run + d;
+      } while (excludeSet.has(pair) || pair === fan);
+      return pair;
+    }
+
+    function generateThreeDigit(run1, run2) {
+      let num;
+      do {
+        num = '' + getRandomDigit() + getRandomDigit() + getRandomDigit();
+      } while (!(num.includes(run1) || num.includes(run2)));
+      return num;
+    }
+
+    function generateNumbers() {
+      const run1 = getRandomDigit();
+      let run2;
+      do {
+        run2 = getRandomDigit();
+      } while (run2 === run1);
+
+      const fan = generateFan(run1, run2);
+      const exclude = new Set([fan]);
+
+      const pairs = [];
+      while (pairs.length < 3) {
+        const p = generateTwoDigit(run1, exclude, fan);
+        pairs.push(p);
+        exclude.add(p);
+      }
+      while (pairs.length < 6) {
+        const p = generateTwoDigit(run2, exclude, fan);
+        pairs.push(p);
+        exclude.add(p);
+      }
+
+      const triple1 = generateThreeDigit(run1, run2);
+      const triple2 = generateThreeDigit(run1, run2);
+
+      document.getElementById('runFun').innerText = `วิ่ง-รูด ${run1} - ${run2} ฟัน ${fan}`;
+      document.getElementById('pairsLine1').innerText = pairs.slice(0, 3).join(' ');
+      document.getElementById('pairsLine2').innerText = pairs.slice(3, 6).join(' ');
+      document.getElementById('triples').innerText = `${triple1} ${triple2}`;
+    }
+
+    function saveImage() {
+      const captureElement = document.getElementById('capture');
+      html2canvas(captureElement, { scale: 3 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'หวยเลขเด็ด.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function setBackground(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('capture').style.backgroundImage = `url(${e.target.result})`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // สร้างปุ่มชื่อหวยแบบสุ่มสี
+    function generateLotteryButtons() {
+      const container = document.getElementById('lotteryButtons');
+      lotteries.forEach(name => {
+        const btn = document.createElement('button');
+        btn.innerText = name.split(' ')[1]; // แสดงเฉพาะชื่อสั้น
+        btn.onclick = () => setLotteryName(name);
+        btn.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        container.appendChild(btn);
+      });
+    }
+
+    // เริ่มต้น
+    generateLotteryButtons();
+    generateNumbers();
+  </script>
+</body>
+</html>
